@@ -16,11 +16,26 @@ body {
 {
     margin-top:0px;
     padding:10px;
+    display: flex;
+    justify-content: space-between;
 }
 
 .color-info-hex
 {
     font-weight: bold;
+    float:left;
+}
+
+.color-info-orignal-color
+{
+    float:left;
+    width:50%;
+}
+
+.color-info-hsv
+{
+    font-weight: bold;
+    float:right;
 }
 
 .right-container

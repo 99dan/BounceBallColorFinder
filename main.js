@@ -1,3 +1,5 @@
+const canvasDiv=document.getElementsByClassName('canvas-div')[0];
+
 const colorPicker=document.getElementById('color-picker');
 const colorList=document.getElementById('color-list');
 const colorPickerLabel=document.getElementById('color-picker-label');
@@ -95,7 +97,7 @@ function hexDis(h1,h2)
     return h.reduce((a,c,i)=>a+(c-k[i])**2,0);
 }
 
-function hexVi(hex,n=80,n2=0.6)
+function hexVi(hex,n=128,n2=0.6)
 {
     let arr=hex2arr(hex);
     let cl=[arrAdder(arr,n),arrAdder(arr,-n),arrDarker(arr,n2),arrLighter(arr,n2)];
@@ -121,8 +123,18 @@ function colorListUpdate(list)
         hexP.className='color-info-hex';
         hexP.innerText='#'+h;
         hexP.style.color='#'+hexVi(h);
-
         div.appendChild(hexP);
+
+        let orgColorD=document.createElement('div');
+        orgColorD.className='color-info-orignal-color';
+        orgColorD.style.backgroundColor=colorPicker.value;
+        div.appendChild(orgColorD);
+        
+        let hsvP=document.createElement('span');
+        hsvP.className='color-info-hsv';
+        hsvP.innerText=c[1][0].join('\n');
+        hsvP.style.color='#'+hexVi(h);
+        div.appendChild(hsvP);
 
         colorList.appendChild(div);
     }
@@ -133,7 +145,7 @@ colorPicker.oninput=function()
     let hex=colorPicker.value;
     colorPickerLabel.innerText=' '+hex;
     let arr=hex2arr(hex.slice(1));
-    colorListUpdate(findNearN(arr,10));
+    colorListUpdate(findNearN(arr,20));
 }
 
 window.onresize=onWindowResize;
