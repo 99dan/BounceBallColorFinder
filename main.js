@@ -98,14 +98,14 @@ let longTouchTimeout=null,longTouchId,longTouchPos,isLongTouch=false;
 window.onpointerdown=function(e)
 {
     if(selectedImage===null)return;
+    let x=e.clientX,y=e.clientY;
+    if(!isInCanvas(x,y))return;
 
     if(e.isPrimary)
     {
         lastX=e.clientX;
         lastY=e.clientY;
     }
-    let x=e.clientX,y=e.clientY;
-    if(!isInCanvas(x,y))return;
     
     pointers[e.pointerId]=e;
 
@@ -137,9 +137,11 @@ window.onpointermove=function(e)
         lastX=e.clientX;
         lastY=e.clientY;
     }
-    let pe=pointers[e.pointerId];
-    pointers[e.pointerId]=e;
     if(e.pressure<=0)return;
+    
+    let pe=pointers[e.pointerId];
+    if(pe===undefined)return;
+    pointers[e.pointerId]=e;
 
     let ids=Object.keys(pointers);if(ids.length>=2)zoomPointersIds=ids.slice(0,2);else lastZoomPos=zoomPointersIds=null;
 
@@ -219,7 +221,7 @@ window.onwheel=function(e)
 {
     let x=e.clientX,y=e.clientY;
     if(!isInCanvas(x,y))return;
-    
+
     let dir=-Math.sign(e.deltaY);
     let newZoom=camera.zoom*1.5**dir;
 
