@@ -97,6 +97,8 @@ let pointers={},lastX=0,lastY=0,zoomPointersIds=null,lastZoomPos=null;
 let longTouchTimeout=null,longTouchId,longTouchPos,isLongTouch=false;
 window.onpointerdown=function(e)
 {
+    if(selectedImage===null)return;
+
     if(e.isPrimary)
     {
         lastX=e.clientX;
@@ -128,6 +130,8 @@ window.onpointerdown=function(e)
 };
 window.onpointermove=function(e)
 {
+    if(selectedImage===null)return;
+    
     if(e.isPrimary)
     {
         lastX=e.clientX;
@@ -195,6 +199,8 @@ window.onpointermove=function(e)
 };
 window.onpointerup=function(e)
 {
+    if(selectedImage===null)return;
+    
     if(e.isPrimary)
     {
         lastX=e.clientX;
