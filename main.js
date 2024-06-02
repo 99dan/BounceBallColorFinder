@@ -7,7 +7,7 @@ const colorList=document.getElementById('color-list');
 const colorPickerLabel=document.getElementById('color-picker-label');
 const fileElement=document.getElementById('file--element');
 
-let selectedImage=null;
+let selectedImage=null,selectedImageData;
 
 const backgroundBitmap=(function()
 {
@@ -62,10 +62,22 @@ function realDraw()
     ctx.translate(-camera.x,-camera.y);
     ctx.scale(camera.zoom,camera.zoom);
 
-    ctx.imageSmoothingEnabled=false;
+    if(camera.zoom>=2)
+        ctx.imageSmoothingEnabled=false;
     if(selectedImage!==null)
         ctx.drawImage(selectedImage,0,0);
     ctx.imageSmoothingEnabled=true;
+
+    if(isLongTouch)
+    {
+        let cx=(lastX+camera.x)/camera.zoom,cy=(lastY+camera.y)/camera.zoom;
+        let x=Math.floor(cx),y=Math.floor(cy);
+        ctx.strokeRect(x-1,y-1,3,3);
+
+        let idx=(x+y*selectedImage.width)*4;
+        colorPicker.value='#'+arr2hex([selectedImageData[idx],selectedImageData[idx+1],selectedImageData[idx+2]]);
+        colorPickerUpdate();
+    }
 
     ctx.resetTransform();
 }
@@ -76,7 +88,13 @@ function isInCanvas(x,y)
     return b.left<=x&&x<=b.right&&b.top<=y&&y<=b.bottom;
 }
 
+function getDis(a1,a2)
+{
+    return ((a1[0]-a2[0])**2+(a1[1]-a2[1])**2)**.5;
+}
+
 let pointers={},lastX=0,lastY=0,zoomPointersIds=null,lastZoomPos=null;
+let longTouchTimeout=null,longTouchId,longTouchPos,isLongTouch=false;
 window.onpointerdown=function(e)
 {
     if(e.isPrimary)
@@ -87,7 +105,24 @@ window.onpointerdown=function(e)
     let x=e.clientX,y=e.clientY;
     if(!isInCanvas(x,y))return;
 
-    let ids=Object.keys(pointers);if(ids.length>=2)zoomPointersIds=ids.slice(0,2);else lastZoomPos=zoomPointersIds=null;
+    let ids=Object.keys(pointers);
+    if(ids.length>=2)
+    {
+        clearTimeout(longTouchTimeout);
+        zoomPointersIds=ids.slice(0,2);
+    }
+    else
+    {
+        longTouchId=e.pointerId;
+        longTouchPos=[e.clientX,e.clientY];
+        longTouchTimeout=setTimeout(()=>
+        {
+            isLongTouch=true;
+            draw();
+        },500);
+
+        lastZoomPos=zoomPointersIds=null
+    }
     
     pointers[e.pointerId]=e;
 };
@@ -104,43 +139,56 @@ window.onpointermove=function(e)
 
     let ids=Object.keys(pointers);if(ids.length>=2)zoomPointersIds=ids.slice(0,2);else lastZoomPos=zoomPointersIds=null;
 
-    if(zoomPointersIds!==null)
+    if(isLongTouch==false)
     {
-        let p1=pointers[zoomPointersIds[0]],p2=pointers[zoomPointersIds[1]];
-        let p1x=p1.clientX,p1y=p1.clientY,p2x=p2.clientX,p2y=p2.clientY;
-
-        if(lastZoomPos!==null)
+        if(zoomPointersIds!==null)
         {
-            let [[pp1x,pp1y],[pp2x,pp2y]]=lastZoomPos;
+            let p1=pointers[zoomPointersIds[0]],p2=pointers[zoomPointersIds[1]];
+            let p1x=p1.clientX,p1y=p1.clientY,p2x=p2.clientX,p2y=p2.clientY;
 
-            let cx=(p1x+p2x)/2,cy=(p1y+p2y)/2;
-            let pcx=(pp1x+pp2x)/2,pcy=(pp1y+pp2y)/2;
+            if(lastZoomPos!==null)
+            {
+                let [[pp1x,pp1y],[pp2x,pp2y]]=lastZoomPos;
 
-            let zp=((p1x-p2x)**2+(p1y-p2y)**2)**.5/((pp1x-pp2x)**2+(pp1y-pp2y)**2)**.5
+                let cx=(p1x+p2x)/2,cy=(p1y+p2y)/2;
+                let pcx=(pp1x+pp2x)/2,pcy=(pp1y+pp2y)/2;
 
-            let newZoom=camera.zoom*zp;
+                let zp=getDis([p1x,p2x],[p1y,p2y])/getDis([pp1x-pp2x],[pp1y-pp2y]);
 
-            let cmx=(cx+camera.x)/camera.zoom;
-            let cmy=(cy+camera.y)/camera.zoom;
+                let newZoom=camera.zoom*zp;
 
-            let ncx=(cmx*newZoom)-cx;
-            let ncy=(cmy*newZoom)-cy;
+                let cmx=(cx+camera.x)/camera.zoom;
+                let cmy=(cy+camera.y)/camera.zoom;
 
-            camera.x=ncx;
-            camera.y=ncy;
+                let ncx=(cmx*newZoom)-cx;
+                let ncy=(cmy*newZoom)-cy;
 
-            camera.zoom=newZoom;
+                camera.x=ncx;
+                camera.y=ncy;
+
+                camera.zoom=newZoom;
 
 
-            camera.x-=cx-pcx;
-            camera.y-=cy-pcy;
+                camera.x-=cx-pcx;
+                camera.y-=cy-pcy;
+            }
+            lastZoomPos=[[p1x,p1y],[p2x,p2y]];
         }
-        lastZoomPos=[[p1x,p1y],[p2x,p2y]];
+        else
+        {
+            camera.x-=e.clientX-pe.clientX;
+            camera.y-=e.clientY-pe.clientY;
+        }
     }
     else
     {
-        camera.x-=e.clientX-pe.clientX;
-        camera.y-=e.clientY-pe.clientY;
+        lastX=e.clientX;
+        lastY=e.clientY;
+    }
+
+    if(longTouchId==e.pointerId&&getDis([e.clientX,e.clientY],longTouchPos)>Math.min(canvas.width,canvas.height)*0.05)
+    {
+        clearTimeout(longTouchTimeout);
     }
     
     draw();
@@ -154,21 +202,15 @@ window.onpointerup=function(e)
     }
     delete pointers[e.pointerId];
 
-    let ids=Object.keys(pointers);if(ids.length>=2)zoomPointersIds=ids.slice(0,2);else lastZoomPos=zoomPointersIds=null;
+    let ids=Object.keys(pointers);
+    if(ids.length>=2)zoomPointersIds=ids.slice(0,2);else lastZoomPos=zoomPointersIds=null;
+
+    if(isLongTouch)isLongTouch=false;
+
+    if(longTouchId==e.pointerId)clearTimeout(longTouchTimeout);
 };
 window.onwheel=function(e)
 {
-    let pe=null;
-    for(let id in pointers)
-    {
-        if(pointers[id].isPrimary)
-        {
-            pe=pointers[id];
-            break;
-        }
-    }
-    if(pe===null)return;
-
     let dir=-Math.sign(e.deltaY);
     let newZoom=camera.zoom*1.5**dir;
 
@@ -228,7 +270,9 @@ function colorListUpdate(list)
     }
 }
 
-colorPicker.oninput=function()
+colorPicker.oninput=colorPickerUpdate;
+
+function colorPickerUpdate()
 {
     let hex=colorPicker.value;
     colorPickerLabel.innerText=' '+hex;
@@ -255,6 +299,11 @@ fileElement.onchange=()=>
 function imageOnLoad()
 {
     document.getElementsByClassName('first-screen')[0].style.display='none';
+
+    let offcanvas=new OffscreenCanvas(selectedImage.width,selectedImage.height);
+    let otx=offcanvas.getContext('2d');
+    otx.drawImage(selectedImage,0,0);
+    selectedImageData=otx.getImageData(0,0,selectedImage.width,selectedImage.height).data;
 
     camera.zoom=Math.min(canvas.width/selectedImage.width,canvas.height/selectedImage.height)*0.8;
     camera.x=(selectedImage.width*camera.zoom-canvas.width)/2;
