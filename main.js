@@ -106,6 +106,8 @@ window.onpointerdown=function(e)
     }
     let x=e.clientX,y=e.clientY;
     if(!isInCanvas(x,y))return;
+    
+    pointers[e.pointerId]=e;
 
     let ids=Object.keys(pointers);
     if(ids.length>=2)
@@ -125,8 +127,6 @@ window.onpointerdown=function(e)
 
         lastZoomPos=zoomPointersIds=null
     }
-    
-    pointers[e.pointerId]=e;
 };
 window.onpointermove=function(e)
 {
@@ -157,7 +157,7 @@ window.onpointermove=function(e)
                 let cx=(p1x+p2x)/2,cy=(p1y+p2y)/2;
                 let pcx=(pp1x+pp2x)/2,pcy=(pp1y+pp2y)/2;
 
-                let zp=getDis([p1x,p2x],[p1y,p2y])/getDis([pp1x-pp2x],[pp1y-pp2y]);
+                let zp=getDis([p1x,p1y],[p2x,p2y])/getDis([pp1x,pp1y],[pp2x,pp2y]);
 
                 let newZoom=camera.zoom*zp;
 
@@ -197,7 +197,7 @@ window.onpointermove=function(e)
     
     draw();
 };
-window.onpointerup=function(e)
+window.onlostpointercapture=window.onpointerup=function(e)
 {
     if(selectedImage===null)return;
     
