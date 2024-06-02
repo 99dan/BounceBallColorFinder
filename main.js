@@ -87,7 +87,7 @@ window.onpointerdown=function(e)
     let x=e.clientX,y=e.clientY;
     if(!isInCanvas(x,y))return;
 
-    let ids=Object.keys(pointers);if(ids.length>=2)zoomPointersIds=ids.slice(0,2);else zoomPointersIds=null;
+    let ids=Object.keys(pointers);if(ids.length>=2)zoomPointersIds=ids.slice(0,2);else lastZoomPos=zoomPointersIds=null;
     
     pointers[e.pointerId]=e;
 };
@@ -102,7 +102,7 @@ window.onpointermove=function(e)
     pointers[e.pointerId]=e;
     if(e.pressure<=0)return;
 
-    let ids=Object.keys(pointers);if(ids.length>=2)zoomPointersIds=ids.slice(0,2);else zoomPointersIds=null;
+    let ids=Object.keys(pointers);if(ids.length>=2)zoomPointersIds=ids.slice(0,2);else lastZoomPos=zoomPointersIds=null;
 
     if(zoomPointersIds!==null)
     {
@@ -120,11 +120,11 @@ window.onpointermove=function(e)
 
             let newZoom=camera.zoom*zp;
 
-            let cmx=(e.clientX+camera.x)/camera.zoom;
-            let cmy=(e.clientY+camera.y)/camera.zoom;
+            let cmx=(cx+camera.x)/camera.zoom;
+            let cmy=(cy+camera.y)/camera.zoom;
 
-            let ncx=(cmx*newZoom)-e.clientX;
-            let ncy=(cmy*newZoom)-e.clientY;
+            let ncx=(cmx*newZoom)-cx;
+            let ncy=(cmy*newZoom)-cy;
 
             camera.x=ncx;
             camera.y=ncy;
@@ -154,7 +154,7 @@ window.onpointerup=function(e)
     }
     delete pointers[e.pointerId];
 
-    let ids=Object.keys(pointers);if(ids.length>=2)zoomPointersIds=ids.slice(0,2);else zoomPointersIds=null;
+    let ids=Object.keys(pointers);if(ids.length>=2)zoomPointersIds=ids.slice(0,2);else lastZoomPos=zoomPointersIds=null;
 };
 window.onwheel=function(e)
 {
