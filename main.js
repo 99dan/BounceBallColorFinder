@@ -217,6 +217,9 @@ window.onlostpointercapture=window.onpointerup=function(e)
 };
 window.onwheel=function(e)
 {
+    let x=e.clientX,y=e.clientY;
+    if(!isInCanvas(x,y))return;
+    
     let dir=-Math.sign(e.deltaY);
     let newZoom=camera.zoom*1.5**dir;
 
