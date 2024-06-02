@@ -12,6 +12,17 @@ body {
     height:70%;
 }
 
+.color-info
+{
+    margin-top:0px;
+    padding:10px;
+}
+
+.color-info-hex
+{
+    font-weight: bold;
+}
+
 .right-container
 {
     padding:10px;
@@ -28,11 +39,6 @@ body {
 .right-container > p
 {
     margin:0px;
-}
-
-.right-container > input
-{
-    width:100%;
 }
 
 @media screen and (min-width:768px)
